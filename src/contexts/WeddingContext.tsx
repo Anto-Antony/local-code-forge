@@ -42,6 +42,7 @@ export interface WeddingContextType {
     setUserId: (id: string | null) => void;
     userWebEntry: WebEntry | null;
     fetchUserWebEntry: (userId: string) => Promise<void>;
+    loadWeddingData: (userId: string) => Promise<void>;
 }
 
 export const WeddingContext = createContext<WeddingContextType | undefined>(

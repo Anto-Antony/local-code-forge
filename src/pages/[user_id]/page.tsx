@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import AdditionalInfoSection from "@/components/AdditionalInfoSection";
 import Background from "@/components/Background";
 import ContactSection from "@/components/ContactSection";
@@ -16,10 +16,19 @@ import WishesSection from "@/components/WishesSection";
 import { useWedding } from "@/contexts/WeddingContext";
 import scrollToElement from "@/utils/scrollToElement";
 
-const Index = () => {
-    const { globalIsLoading, userWebEntry } = useWedding();
+const UserWeddingPage = () => {
+    const { user_id } = useParams();
+    const { globalIsLoading, loadWeddingData } = useWedding();
     const location = useLocation();
 
+    // Fetch the relevant wedding data when the route changes
+    useEffect(() => {
+        if (user_id) {
+            loadWeddingData(user_id);
+        }
+    }, [user_id, loadWeddingData]);
+
+    // Optionally scroll to section if specified in the link state
     useEffect(() => {
         const elementId = location.state?.scrollTo;
         if (elementId) {
@@ -28,7 +37,7 @@ const Index = () => {
         }
     }, [location.state]);
 
-    if (globalIsLoading || !userWebEntry) {
+    if (globalIsLoading) {
         return <Loading />;
     }
 
@@ -37,15 +46,15 @@ const Index = () => {
             <div className="relative z-10">
                 <Header />
                 <main>
-                    <HeroSection data={userWebEntry.web_data?.hero} />
-                    <StorySection data={userWebEntry.web_data?.story} />
+                    <HeroSection />
+                    <StorySection />
                     <WeddingDetailsSection />
                     <ScheduleSection />
                     <GallerySection />
-                    <WishesSection />
-                    <AdditionalInfoSection />
-                    <ContactSection />
                     <JewellerSection />
+                    <AdditionalInfoSection />
+                    <WishesSection />
+                    <ContactSection />
                     <Footer />
                 </main>
             </div>
@@ -53,4 +62,4 @@ const Index = () => {
     );
 };
 
-export default Index;
+export default UserWeddingPage;

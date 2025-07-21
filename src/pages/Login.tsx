@@ -38,7 +38,7 @@ const Login = () => {
                 });
                 setUserId(result.user.id);
                 await fetchUserWebEntry(result.user.id);
-                navigate("/home");
+                navigate(`/wedding/${result.user.id}`);
             } else {
                 toast({
                     title: "Error",

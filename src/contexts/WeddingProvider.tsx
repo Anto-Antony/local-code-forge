@@ -470,6 +470,7 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
                 setUserId,
                 userWebEntry,
                 fetchUserWebEntry,
+                loadWeddingData,
             }}
         >
             {children}
