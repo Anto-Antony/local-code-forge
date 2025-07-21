@@ -17,7 +17,7 @@ import { useWedding } from "@/contexts/WeddingContext";
 import scrollToElement from "@/utils/scrollToElement";
 
 const Index = () => {
-    const { globalIsLoading } = useWedding();
+    const { globalIsLoading, userWebEntry } = useWedding();
     const location = useLocation();
 
     useEffect(() => {
@@ -28,7 +28,7 @@ const Index = () => {
         }
     }, [location.state]);
 
-    if (globalIsLoading) {
+    if (globalIsLoading || !userWebEntry) {
         return <Loading />;
     }
 
@@ -37,8 +37,8 @@ const Index = () => {
             <div className="relative z-10">
                 <Header />
                 <main>
-                    <HeroSection />
-                    <StorySection />
+                    <HeroSection data={userWebEntry.web_data?.hero} />
+                    <StorySection data={userWebEntry.web_data?.story} />
                     <WeddingDetailsSection />
                     <ScheduleSection />
                     <GallerySection />

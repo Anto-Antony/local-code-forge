@@ -8,13 +8,14 @@ import { useWedding } from "@/contexts/WeddingContext";
 import { useToast } from "@/hooks/use-toast";
 import Background from "@/components/Background";
 import { ArrowRightLeft, LucideArrowLeftSquare } from "lucide-react";
+import { WebEntry } from "@/types/wedding";
 
 const Login = () => {
     const [email, setEmail] = useState("user@gmail.com");
     const [password, setPassword] = useState("password");
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
-    const { login } = useWedding();
+    const { login, setUserId, fetchUserWebEntry } = useWedding();
     const { toast } = useToast();
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -27,23 +28,31 @@ const Login = () => {
             if (result.error) {
                 toast({
                     title: "Error",
-                    description: result.error.message,
+                    description: result.error,
                     variant: "destructive",
                 });
-            } else {
+            } else if (result.user) {
                 toast({
                     title: "Success",
                     description: "Logged in successfully!",
                 });
-                navigate("/");
+                setUserId(result.user.id);
+                await fetchUserWebEntry(result.user.id);
+                navigate("/home");
+            } else {
+                toast({
+                    title: "Error",
+                    description: "Login failed: No user returned.",
+                    variant: "destructive",
+                });
             }
-        } catch (error) {
+        } catch (error: any) {
             toast({
                 title: "Error",
-                description: "An unexpected error occurred",
+                description: error?.message || "An unexpected error occurred",
                 variant: "destructive",
             });
-            console.log("Error logging in:", error.message);
+            console.log("Error logging in:", error?.message);
         } finally {
             setIsLoading(false);
         }

@@ -11,6 +11,9 @@ import type {
     WeddingWish,
     WeddingWishType,
 } from "@/types/wedding";
+import { WebEntry } from "@/types/wedding";
+import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 
 export interface WeddingContextType {
     weddingData: WeddingData;
@@ -20,6 +23,7 @@ export interface WeddingContextType {
     session: Session | null;
     isLoggedIn: boolean;
     globalIsLoading: boolean;
+    editable: boolean; // true if owner, false if guest
     updateWeddingData: (data: Partial<WeddingData>) => Promise<boolean>;
     updateGalleryImage: (
         file: File | null,
@@ -32,8 +36,12 @@ export interface WeddingContextType {
     login: (
         email: string,
         password: string,
-    ) => Promise<{ error: AuthError | null }>;
+    ) => Promise<{ error: string | null }>; // match custom login
     logout: () => Promise<void>;
+    userId: string | null;
+    setUserId: (id: string | null) => void;
+    userWebEntry: WebEntry | null;
+    fetchUserWebEntry: (userId: string) => Promise<void>;
 }
 
 export const WeddingContext = createContext<WeddingContextType | undefined>(

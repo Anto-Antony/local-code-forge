@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import AllWishes from "./pages/AllWishes";
 import NotFound from "./pages/NotFound";
 import GalleryPage from "./pages/AllImages";
+import WeddingPage from "./pages/WeddingPage";
 
 const queryClient = new QueryClient();
 
@@ -20,10 +21,14 @@ const App = () => (
                 <Sonner />
                 <BrowserRouter>
                     <Routes>
-                        <Route path="/" element={<Index />} />
+                        <Route path="/" element={<Login />} />
+                        <Route path="/home" element={<Index />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/wishes" element={<AllWishes />} />
                         <Route path="/gallery" element={<GalleryPage />} />
+                        {/* Dynamic wedding routes */}
+                        <Route path="/wedding/:user_id" element={<WeddingPage />} />
+                        <Route path="/wedding/slug/:slug" element={<WeddingPage />} />
                         <Route path="*" element={<NotFound />} />
                     </Routes>
                 </BrowserRouter>

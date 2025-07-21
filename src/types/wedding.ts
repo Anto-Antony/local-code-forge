@@ -2,6 +2,29 @@ export interface User {
     id: string;
     email: string;
     isAuthenticated: boolean;
+    bride_name?: string;
+    groom_name?: string;
+    phone_number?: string;
+}
+
+// user_profile table type
+export interface UserProfile {
+    user_id: string;
+    email: string;
+    bride_name: string;
+    groom_name: string;
+    phone_number: string;
+    password?: string; // Only for dev/testing, not for production
+}
+
+// web_entries table type
+export interface WebEntry {
+    id: string;
+    user_id: string;
+    web_data: any; // or a more specific type if you know the structure
+    created_at: string;
+    updated_at: string | null;
+    wishes: any; // or a more specific type
 }
 
 export interface WeddingCouple {
