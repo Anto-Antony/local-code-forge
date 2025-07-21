@@ -1,5 +1,10 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "local-code-forge",
+  "description": "A React + Vite + TypeScript + Tailwind CSS starter project.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Anto-Antony/local-code-forge.git"
+  },
   "private": true,
   "version": "0.0.0",
   "type": "module",
