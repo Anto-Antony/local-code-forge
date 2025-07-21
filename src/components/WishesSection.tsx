@@ -34,7 +34,6 @@ const WishesSection = () => {
         try {
             await addWish(newWish);
         } catch (error) {
-            console.log("Error adding new wisht to backend: ", error);
             setWeddingWishes(originalWishes);
         }
 

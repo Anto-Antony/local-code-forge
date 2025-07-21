@@ -9,7 +9,7 @@ const uploadImage = async (
 ): Promise<string | null> => {
     const imagePath = `user_uploads/${user.id}/${name}`;
     const { error } = await supabase.storage
-        .from("images")
+        .from("gallery")
         .upload(imagePath, file, {
             upsert: true,
         });
@@ -29,7 +29,7 @@ const uploadImage = async (
         description: "Please wait few seconds to see the effect.",
     });
 
-    const { data } = supabase.storage.from("images").getPublicUrl(imagePath);
+    const { data } = supabase.storage.from("gallery").getPublicUrl(imagePath);
 
     if (!data.publicUrl) {
         toast({

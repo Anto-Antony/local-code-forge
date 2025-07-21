@@ -1,6 +1,6 @@
 import type { Session } from "@supabase/supabase-js";
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { flushSync } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
@@ -151,8 +151,8 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
     const [userWebEntry, setUserWebEntry] = useState<WebEntry | null>(null);
 
     // loadWeddingData is now inside the component and can access state setters
-    const loadWeddingData = async (userId: string) => {
-        console.log("[loadWeddingData] Start loading wedding data for user:", userId);
+    const loadWeddingData = useCallback(async (userId: string) => {
+        console.log("Calling loadWeddingData for user:", userId);
         try {
             const { data, error } = await supabase
                 .from("web_entries")
@@ -160,14 +160,11 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
                 .eq("user_id", userId)
                 .maybeSingle();
 
-            console.log("[loadWeddingData] Supabase response:", { data, error });
-
             if (error || !data || !data.web_data) {
                 // If no data from Supabase, use default
                 setWeddingData(defaultWeddingData);
                 setWeddingWishes([]);
                 setGloabalIsLoading(false);
-                console.log("[loadWeddingData] No wedding data found in Supabase. Using default data.");
                 return;
             }
 
@@ -183,9 +180,8 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
             setWeddingData(defaultWeddingData);
             setWeddingWishes([]);
             setGloabalIsLoading(false);
-            console.log("[loadWeddingData] Error loading wedding data from Supabase. Using default data.", error);
         }
-    };
+    }, [setWeddingData, setWeddingWishes, setGloabalIsLoading]);
 
     const fetchUserWebEntry = async (userId: string) => {
         const { data, error } = await supabase
@@ -197,12 +193,11 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
         // Optionally handle error
     };
 
-    useEffect(() => {
+    // useEffect(() => {
         // Set up auth state listener
         // const {
         //     data: { subscription },
         // } = supabase.auth.onAuthStateChange((_, session) => {
-        //     console.log("[AuthStateChange] Auth state changed. Session:", session);
         //     flushSync(() => setSession(session));
         //     if (session?.user) {
         //         const mappedUser: User = {
@@ -212,18 +207,15 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
         //         };
         //         setUser(mappedUser);
         //         setIsLoggedIn(true);
-        //         console.log("[AuthStateChange] User logged in:", mappedUser);
         //         loadWeddingData(session.user.id);
         //     } else {
         //         setUser(null);
         //         setIsLoggedIn(false);
-        //         console.log("[AuthStateChange] User logged out");
         //     }
         // });
 
         // // Check for existing session
         // supabase.auth.getSession().then(({ data: { session } }) => {
-        //     console.log("[getSession] Checking for existing session:", session);
         //     setSession(session);
         //     if (session?.user) {
         //         const mappedUser: User = {
@@ -233,33 +225,25 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
         //         };
         //         setUser(mappedUser);
         //         setIsLoggedIn(true);
-        //         console.log("[getSession] Existing user session found:", mappedUser);
         //         loadWeddingData(session.user.id);
         //     }
         // });
 
-        return undefined;
-    }, []);
+    //     return undefined;
+    // }, []);
 
     const loadAllWeddingWishes = async () => {
         if (!user?.id) {
-            console.log("[loadAllWeddingWishes] No user ID found");
             return;
         }
         try {
-            console.log("[loadAllWeddingWishes] Loading all wishes for user:", user.id);
             const { data: wishData, error: wishError } = await supabase
                 .from("web_entries")
                 .select("wishes")
                 .eq("user_id", user.id)
                 .maybeSingle();
-            console.log("[loadAllWeddingWishes] Wish data fetched:", wishData);
 
             if (wishError) {
-                console.log(
-                    "Error loading all wishes (Supabase error): ",
-                    wishError,
-                );
                 return;
             }
 
@@ -270,25 +254,20 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
                     ...wish,
                 }));
                 setWeddingWishes(mergedWishes);
-                console.log("[loadAllWeddingWishes] Wedding wishes set in state");
             }
         } catch (error) {
-            console.log("Error loading all wishes: ", error);
         }
     };
 
     const updateWeddingData = async (
         data: Partial<WeddingData>,
     ): Promise<boolean> => {
-        console.log("[updateWeddingData] Updating wedding data with:", data);
         const prev = structuredClone(weddingData);
         const updated = { ...weddingData, ...data };
 
         setWeddingData(updated);
-        console.log("[updateWeddingData] Wedding data set in state");
 
         const success = await saveData(updated);
-        console.log("[updateWeddingData] Save to database success:", success);
 
         if (!success) setWeddingData(prev);
 
@@ -300,7 +279,6 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
         imageCaption: string | null,
         index: number,
     ) => {
-        console.log("[updateGalleryImage] Updating gallery image at index:", index);
         const image_id = `${Date.now()}-${crypto.randomUUID()}`;
         const image_name = `gallery_image_${image_id}`;
         const updatedGallery = [...weddingData.gallery];
@@ -312,14 +290,11 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
                 caption: imageCaption,
                 name: image_name,
             });
-            console.log("[updateGalleryImage] Added new gallery image placeholder");
         }
 
         if (file) {
             const imageUrl = await uploadImage(file, user, image_name);
-            console.log("[updateGalleryImage] Uploaded image URL:", imageUrl);
             if (!imageUrl) {
-                console.log("[updateGalleryImage] Image upload failed");
                 return;
             }
             updatedGallery[index].url = imageUrl;
@@ -327,15 +302,12 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
 
         updatedGallery[index].caption = imageCaption;
         updateWeddingData({ gallery: updatedGallery });
-        console.log("[updateGalleryImage] Gallery image updated in state");
     };
 
     const saveData = async (data: WeddingData): Promise<boolean> => {
         if (!user?.id) {
-            console.error("[saveData] No user logged in");
             return false;
         }
-        console.log("[saveData] Saving data to web_entries for user:", user.id);
         try {
             const { error } = await supabase.from("web_entries").upsert(
                 {
@@ -346,12 +318,9 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
                 { onConflict: "user_id" }
             );
             if (error) {
-                console.error("[saveData] Error saving wedding data:", error);
                 return false;
             }
-            console.log("[saveData] Data saved successfully");
         } catch (error) {
-            console.error("[saveData] Error saving wedding data:", error);
             return false;
         }
         return true;
@@ -359,7 +328,6 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const addWish = async (wish: WeddingWish) => {
         if (!user?.id) {
-            console.log("[addWish] No user ID found");
             return;
         }
         try {
@@ -382,13 +350,8 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
                 .update({ wishes, updated_at: new Date().toISOString() })
                 .eq("user_id", user.id);
 
-            if (updateError) {
-                console.log("[addWish] Error updating wishes", updateError);
-            } else {
-                console.log("[addWish] Wish added successfully");
-            }
+    
         } catch (error) {
-            console.log("[addWish] Error adding new wish", error);
         }
     };
 
@@ -397,7 +360,6 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
         password: string
     ): Promise<{ user: User | null; error: string | null }> => {
         setGloabalIsLoading(true);
-        console.log("[login] Attempting custom login for email:", email);
         // Fetch user profile by email
         const { data, error } = await supabase
             .from("user_profile")
@@ -406,13 +368,11 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
             .maybeSingle();
     
         if (error || !data) {
-            console.log("[login] Login error: ", error || "No user found");
             setGloabalIsLoading(false);
             return { user: null, error: "No user found" };
         }
     
         if (data.password !== password) {
-            console.log("[login] Incorrect password");
             setGloabalIsLoading(false);
             return { user: null, error: "Incorrect password" };
         }
@@ -445,7 +405,6 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
         setWeddingWishes([]);
         setIsLoggedIn(false);
         setGloabalIsLoading(false);
-        console.log("[logout] User logged out");
     };
 
     return (
