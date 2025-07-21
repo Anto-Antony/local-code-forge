@@ -150,6 +150,43 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
     const [userId, setUserId] = useState<string | null>(null);
     const [userWebEntry, setUserWebEntry] = useState<WebEntry | null>(null);
 
+    // loadWeddingData is now inside the component and can access state setters
+    const loadWeddingData = async (userId: string) => {
+        console.log("[loadWeddingData] Start loading wedding data for user:", userId);
+        try {
+            const { data, error } = await supabase
+                .from("web_entries")
+                .select("web_data, wishes")
+                .eq("user_id", userId)
+                .maybeSingle();
+
+            console.log("[loadWeddingData] Supabase response:", { data, error });
+
+            if (error || !data || !data.web_data) {
+                // If no data from Supabase, use default
+                setWeddingData(defaultWeddingData);
+                setWeddingWishes([]);
+                setGloabalIsLoading(false);
+                console.log("[loadWeddingData] No wedding data found in Supabase. Using default data.");
+                return;
+            }
+
+            // If data exists, use it
+            setWeddingData({ ...defaultWeddingData, ...data.web_data });
+            const mergedWishes = (data.wishes || []).map((wish: any) =>
+                ({ ...defaultWeddingWish, ...wish })
+            );
+            setWeddingWishes(mergedWishes);
+            setGloabalIsLoading(false);
+        } catch (error) {
+            // On error, use default data
+            setWeddingData(defaultWeddingData);
+            setWeddingWishes([]);
+            setGloabalIsLoading(false);
+            console.log("[loadWeddingData] Error loading wedding data from Supabase. Using default data.", error);
+        }
+    };
+
     const fetchUserWebEntry = async (userId: string) => {
         const { data, error } = await supabase
             .from("web_entries")
@@ -162,42 +199,6 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
 
     useEffect(() => {
         // Set up auth state listener
-        const loadWeddingData = async (userId: string) => {
-            console.log("[loadWeddingData] Start loading wedding data for user:", userId);
-            try {
-                const { data, error } = await supabase
-                    .from("web_entries")
-                    .select("web_data, wishes")
-                    .eq("user_id", userId)
-                    .maybeSingle();
-
-                console.log("[loadWeddingData] Supabase response:", { data, error });
-
-                if (error || !data || !data.web_data) {
-                    // If no data from Supabase, use default
-                    setWeddingData(defaultWeddingData);
-                    setWeddingWishes([]);
-                    setGloabalIsLoading(false);
-                    console.log("[loadWeddingData] No wedding data found in Supabase. Using default data.");
-                    return;
-                }
-
-                // If data exists, use it
-                setWeddingData({ ...defaultWeddingData, ...data.web_data });
-                const mergedWishes = (data.wishes || []).map((wish: any) =>
-                    ({ ...defaultWeddingWish, ...wish })
-                );
-                setWeddingWishes(mergedWishes);
-                setGloabalIsLoading(false);
-            } catch (error) {
-                // On error, use default data
-                setWeddingData(defaultWeddingData);
-                setWeddingWishes([]);
-                setGloabalIsLoading(false);
-                console.log("[loadWeddingData] Error loading wedding data from Supabase. Using default data.", error);
-            }
-        };
-     
         // const {
         //     data: { subscription },
         // } = supabase.auth.onAuthStateChange((_, session) => {
@@ -429,7 +430,7 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsLoggedIn(true);
     
         // Load wedding data (and wishes) after login
-        // await loadWeddingData(data.user_id); // Remove or refactor this for new flow
+        await loadWeddingData(data.user_id);
         setUserId(data.user_id);
         await fetchUserWebEntry(data.user_id);
     
