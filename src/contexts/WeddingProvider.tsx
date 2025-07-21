@@ -150,6 +150,30 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
     const [userId, setUserId] = useState<string | null>(null);
     const [userWebEntry, setUserWebEntry] = useState<WebEntry | null>(null);
 
+    // Restore user and login state from localStorage on mount
+    useEffect(() => {
+        const storedUser = localStorage.getItem("wedding_user");
+        const storedIsLoggedIn = localStorage.getItem("wedding_isLoggedIn");
+        const storedUserId = localStorage.getItem("wedding_userId");
+        if (storedUser && storedIsLoggedIn === "true") {
+            try {
+                const parsedUser = JSON.parse(storedUser);
+                setUser(parsedUser);
+                setIsLoggedIn(true);
+                if (storedUserId) setUserId(storedUserId);
+                // Optionally, reload wedding data
+                loadWeddingData(parsedUser.id);
+                fetchUserWebEntry(parsedUser.id);
+            } catch (e) {
+                // If parsing fails, clear localStorage
+                localStorage.removeItem("wedding_user");
+                localStorage.removeItem("wedding_isLoggedIn");
+                localStorage.removeItem("wedding_userId");
+            }
+        }
+        setGloabalIsLoading(false);
+    }, []);
+
     // loadWeddingData is now inside the component and can access state setters
     const loadWeddingData = useCallback(async (userId: string) => {
         console.log("Calling loadWeddingData for user:", userId);
@@ -388,6 +412,10 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
         };
         setUser(customUser);
         setIsLoggedIn(true);
+        // Persist to localStorage
+        localStorage.setItem("wedding_user", JSON.stringify(customUser));
+        localStorage.setItem("wedding_isLoggedIn", "true");
+        localStorage.setItem("wedding_userId", data.user_id);
     
         // Load wedding data (and wishes) after login
         await loadWeddingData(data.user_id);
@@ -405,6 +433,10 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
         setWeddingWishes([]);
         setIsLoggedIn(false);
         setGloabalIsLoading(false);
+        // Clear localStorage
+        localStorage.removeItem("wedding_user");
+        localStorage.removeItem("wedding_isLoggedIn");
+        localStorage.removeItem("wedding_userId");
     };
 
     return (
