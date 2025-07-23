@@ -246,3 +246,11 @@ All colors MUST be HSL.
         }
     }
 }
+
+/* Sidebar floating mode gap fix */
+.group[data-variant="floating"] > .duration-200.relative {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  display: none !important;
+}

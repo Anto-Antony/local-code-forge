@@ -18,7 +18,7 @@ import scrollToElement from "@/utils/scrollToElement";
 
 const UserWeddingPage = () => {
     const { user_id } = useParams();
-    const { globalIsLoading, loadWeddingData } = useWedding();
+    const { globalIsLoading, loadWeddingData, editable } = useWedding();
     const location = useLocation();
 
     // Fetch the relevant wedding data when the route changes
@@ -45,6 +45,7 @@ const UserWeddingPage = () => {
         <Background>
             <div className="relative z-10">
                 <Header />
+                
                 <main>
                     <HeroSection />
                     <StorySection />

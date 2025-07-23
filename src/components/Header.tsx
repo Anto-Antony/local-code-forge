@@ -2,6 +2,7 @@ import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useWedding } from "@/contexts/WeddingContext";
+import { useWeddingAuth } from "@/contexts/WeddingAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import scrollToElement from "@/utils/scrollToElement";
@@ -9,7 +10,8 @@ import scrollToElement from "@/utils/scrollToElement";
 const Header: React.FC<{ isNotIndexPage?: boolean }> = ({ isNotIndexPage }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
-    const { weddingData, logout, isLoggedIn } = useWedding();
+    const { weddingData } = useWedding();
+    const { logout, isLoggedIn } = useWeddingAuth();
     const { toast } = useToast();
     const location = useLocation();
     const navigate = useNavigate();
@@ -67,7 +69,7 @@ const Header: React.FC<{ isNotIndexPage?: boolean }> = ({ isNotIndexPage }) => {
     return (
         <header
             className={cn(
-                "fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/20 border-b border-white/20 transition-all duration-200 h-auto",
+                "backdrop-blur-md bg-white/20 border-b border-white/20 transition-all duration-200 h-auto",
                 (!isScrolled || isNotIndexPage) && "bg-transparent",
             )}
         >

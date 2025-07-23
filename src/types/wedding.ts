@@ -104,6 +104,7 @@ export interface WeddingData {
     moreInfo: WeddingMoreInfo;
     contact: WeddingContact;
     jeweller: WeddingJeweller;
+    template?: string; // Add this line to store the selected template
 }
 
 export interface WeddingWish {

@@ -1,20 +1,18 @@
-import type { Session } from "@supabase/supabase-js";
-import type React from "react";
-import { useEffect, useState, useCallback } from "react";
-import { flushSync } from "react-dom";
+import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import type {
-    User,
     WeddingData,
     WeddingWish,
     WeddingWishType,
     WebEntry,
+    User,
 } from "@/types/wedding";
 import uploadImage from "@/utils/UploadImage";
 import { WeddingContext } from "./WeddingContext";
-import { deepMerge } from "@/lib/utils";
+import { useWeddingAuth } from "./WeddingAuthContext";
 
+// --- Default Data ---
 const defaultWeddingData: WeddingData = {
     couple: {
         groomName: "Nithin",
@@ -138,45 +136,31 @@ const defaultWeddingWish: WeddingWish = {
 
 export { defaultWeddingData, defaultWeddingWish };
 
-export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
-    children,
-}) => {
+export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    // --- Auth State from Auth Context ---
+    const { user, isLoggedIn, userId, setUserId, globalIsLoading } = useWeddingAuth();
+
+    // --- Wedding State ---
     const [weddingData, setWeddingData] = useState<WeddingData>(defaultWeddingData);
     const [weddingWishes, setWeddingWishes] = useState<WeddingWishType>([]);
-    const [user, setUser] = useState<User | null>(null);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [globalIsLoading, setGloabalIsLoading] = useState(true);
     const [editable, setEditable] = useState(false);
-    const [userId, setUserId] = useState<string | null>(null);
     const [userWebEntry, setUserWebEntry] = useState<WebEntry | null>(null);
 
-    // Restore user and login state from localStorage on mount
+    // --- Effects ---
     useEffect(() => {
-        const storedUser = localStorage.getItem("wedding_user");
-        const storedIsLoggedIn = localStorage.getItem("wedding_isLoggedIn");
-        const storedUserId = localStorage.getItem("wedding_userId");
-        if (storedUser && storedIsLoggedIn === "true") {
-            try {
-                const parsedUser = JSON.parse(storedUser);
-                setUser(parsedUser);
-                setIsLoggedIn(true);
-                if (storedUserId) setUserId(storedUserId);
-                // Optionally, reload wedding data
-                loadWeddingData(parsedUser.id);
-                fetchUserWebEntry(parsedUser.id);
-            } catch (e) {
-                // If parsing fails, clear localStorage
-                localStorage.removeItem("wedding_user");
-                localStorage.removeItem("wedding_isLoggedIn");
-                localStorage.removeItem("wedding_userId");
-            }
+        if (userId) {
+            loadWeddingData(userId);
+            fetchUserWebEntry(userId);
         }
-        setGloabalIsLoading(false);
-    }, []);
+    }, [userId]);
 
-    // loadWeddingData is now inside the component and can access state setters
-    const loadWeddingData = useCallback(async (userId: string) => {
-        console.log("Calling loadWeddingData for user:", userId);
+    useEffect(() => {
+        // editable if logged in and the logged-in user is the owner of the page
+        setEditable(!!user && !!userId && user.id === userId);
+    }, [user, userId]);
+
+    // --- Data Loaders ---
+    const loadWeddingData = useCallback(async (userId: string): Promise<void> => {
         try {
             const { data, error } = await supabase
                 .from("web_entries")
@@ -185,81 +169,40 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
                 .maybeSingle();
 
             if (error || !data || !data.web_data) {
-                // If no data from Supabase, use default
                 setWeddingData(defaultWeddingData);
                 setWeddingWishes([]);
-                setGloabalIsLoading(false);
                 return;
             }
 
-            // If data exists, use it
             setWeddingData({ ...defaultWeddingData, ...data.web_data });
             const mergedWishes = (data.wishes || []).map((wish: any) =>
                 ({ ...defaultWeddingWish, ...wish })
             );
             setWeddingWishes(mergedWishes);
-            setGloabalIsLoading(false);
         } catch (error) {
-            // On error, use default data
             setWeddingData(defaultWeddingData);
             setWeddingWishes([]);
-            setGloabalIsLoading(false);
+            // Optionally log error
+            // console.error(error);
         }
-    }, [setWeddingData, setWeddingWishes, setGloabalIsLoading]);
+    }, []);
 
-    const fetchUserWebEntry = async (userId: string) => {
+    const fetchUserWebEntry = useCallback(async (userId: string): Promise<void> => {
+        try {
         const { data, error } = await supabase
             .from("web_entries")
             .select("*")
             .eq("user_id", userId)
             .single();
         if (!error && data) setUserWebEntry(data);
-        // Optionally handle error
-    };
-
-    // useEffect(() => {
-        // Set up auth state listener
-        // const {
-        //     data: { subscription },
-        // } = supabase.auth.onAuthStateChange((_, session) => {
-        //     flushSync(() => setSession(session));
-        //     if (session?.user) {
-        //         const mappedUser: User = {
-        //             id: session.user.id,
-        //             email: session.user.email || "",
-        //             isAuthenticated: true,
-        //         };
-        //         setUser(mappedUser);
-        //         setIsLoggedIn(true);
-        //         loadWeddingData(session.user.id);
-        //     } else {
-        //         setUser(null);
-        //         setIsLoggedIn(false);
-        //     }
-        // });
-
-        // // Check for existing session
-        // supabase.auth.getSession().then(({ data: { session } }) => {
-        //     setSession(session);
-        //     if (session?.user) {
-        //         const mappedUser: User = {
-        //             id: session.user.id,
-        //             email: session.user.email || "",
-        //             isAuthenticated: true,
-        //         };
-        //         setUser(mappedUser);
-        //         setIsLoggedIn(true);
-        //         loadWeddingData(session.user.id);
-        //     }
-        // });
-
-    //     return undefined;
-    // }, []);
-
-    const loadAllWeddingWishes = async () => {
-        if (!user?.id) {
-            return;
+        } catch (error) {
+            // Optionally log error
+            // console.error(error);
         }
+    }, []);
+
+    const loadAllWeddingWishes = useCallback(async (): Promise<void> => {
+        if (!user?.id) return;
         try {
             const { data: wishData, error: wishError } = await supabase
                 .from("web_entries")
@@ -267,12 +210,9 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
                 .eq("user_id", user.id)
                 .maybeSingle();
 
-            if (wishError) {
-                return;
-            }
+            if (wishError) return;
 
             if (wishData) {
-                // Merge each wish with default values for missing fields
                 const mergedWishes = (wishData.wishes || []).map((wish: any) => ({
                     ...defaultWeddingWish,
                     ...wish,
@@ -280,12 +220,33 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
                 setWeddingWishes(mergedWishes);
             }
         } catch (error) {
+            // Optionally log error
+            // console.error(error);
         }
-    };
+    }, [user]);
 
-    const updateWeddingData = async (
-        data: Partial<WeddingData>,
-    ): Promise<boolean> => {
+    // --- Data Updaters ---
+    const saveData = useCallback(async (data: WeddingData): Promise<boolean> => {
+        if (!user?.id) return false;
+        try {
+            const { error } = await supabase.from("web_entries").upsert(
+                {
+                    user_id: user.id,
+                    web_data: data,
+                    updated_at: new Date().toISOString(),
+                },
+                { onConflict: "user_id" }
+            );
+            if (error) return false;
+        } catch (error) {
+            // Optionally log error
+            // console.error(error);
+            return false;
+        }
+        return true;
+    }, [user]);
+
+    const updateWeddingData = useCallback(async (data: Partial<WeddingData>): Promise<boolean> => {
         const prev = structuredClone(weddingData);
         const updated = { ...weddingData, ...data };
 
@@ -296,13 +257,13 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
         if (!success) setWeddingData(prev);
 
         return success;
-    };
+    }, [weddingData, saveData]);
 
-    const updateGalleryImage = async (
+    const updateGalleryImage = useCallback(async (
         file: File | null,
         imageCaption: string | null,
         index: number,
-    ) => {
+    ): Promise<void> => {
         const image_id = `${Date.now()}-${crypto.randomUUID()}`;
         const image_name = `gallery_image_${image_id}`;
         const updatedGallery = [...weddingData.gallery];
@@ -318,44 +279,17 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
 
         if (file) {
             const imageUrl = await uploadImage(file, user, image_name);
-            if (!imageUrl) {
-                return;
-            }
+            if (!imageUrl) return;
             updatedGallery[index].url = imageUrl;
         }
 
         updatedGallery[index].caption = imageCaption;
         updateWeddingData({ gallery: updatedGallery });
-    };
+    }, [weddingData, user, updateWeddingData]);
 
-    const saveData = async (data: WeddingData): Promise<boolean> => {
-        if (!user?.id) {
-            return false;
-        }
+    const addWish = useCallback(async (wish: WeddingWish): Promise<void> => {
+        if (!user?.id) return;
         try {
-            const { error } = await supabase.from("web_entries").upsert(
-                {
-                    user_id: user.id,
-                    web_data: data,
-                    updated_at: new Date().toISOString(),
-                },
-                { onConflict: "user_id" }
-            );
-            if (error) {
-                return false;
-            }
-        } catch (error) {
-            return false;
-        }
-        return true;
-    };
-
-    const addWish = async (wish: WeddingWish) => {
-        if (!user?.id) {
-            return;
-        }
-        try {
-            // Fetch current wishes
             const { data, error } = await supabase
                 .from("web_entries")
                 .select("wishes")
@@ -363,85 +297,22 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
                 .maybeSingle();
 
             let wishes: WeddingWishType = [];
-            if (data && data.wishes) {
-                wishes = data.wishes;
-            }
+            if (data && data.wishes) wishes = data.wishes;
             wishes.push(wish);
 
-            // Update wishes array
-            const { error: updateError } = await supabase
+            await supabase
                 .from("web_entries")
                 .update({ wishes, updated_at: new Date().toISOString() })
                 .eq("user_id", user.id);
-
     
         } catch (error) {
+            // Optionally log error
+            // console.error(error);
         }
-    };
+    }, [user]);
 
-    const login = async (
-        email: string,
-        password: string
-    ): Promise<{ user: User | null; error: string | null }> => {
-        setGloabalIsLoading(true);
-        // Fetch user profile by email
-        const { data, error } = await supabase
-            .from("user_profile")
-            .select("user_id, bride_name, groom_name, email, phone_number, password")
-            .eq("email", email)
-            .maybeSingle();
-    
-        if (error || !data) {
-            setGloabalIsLoading(false);
-            return { user: null, error: "No user found" };
-        }
-    
-        if (data.password !== password) {
-            setGloabalIsLoading(false);
-            return { user: null, error: "Incorrect password" };
-        }
-    
-        const customUser: User = {
-            id: data.user_id,
-            email: data.email,
-            isAuthenticated: true,
-            bride_name: data.bride_name,
-            groom_name: data.groom_name,
-            phone_number: data.phone_number,
-            // Add other fields as you need them
-        };
-        setUser(customUser);
-        setIsLoggedIn(true);
-        // Persist to localStorage
-        localStorage.setItem("wedding_user", JSON.stringify(customUser));
-        localStorage.setItem("wedding_isLoggedIn", "true");
-        localStorage.setItem("wedding_userId", data.user_id);
-    
-        // Load wedding data (and wishes) after login
-        await loadWeddingData(data.user_id);
-        setUserId(data.user_id);
-        await fetchUserWebEntry(data.user_id);
-    
-        setGloabalIsLoading(false);
-        return { user: customUser, error: null };
-    };
-    
-
-    const logout = async () => {
-        setUser(null);
-        setWeddingData(defaultWeddingData);
-        setWeddingWishes([]);
-        setIsLoggedIn(false);
-        setGloabalIsLoading(false);
-        // Clear localStorage
-        localStorage.removeItem("wedding_user");
-        localStorage.removeItem("wedding_isLoggedIn");
-        localStorage.removeItem("wedding_userId");
-    };
-
-    return (
-        <WeddingContext.Provider
-            value={{
+    // --- Provider Value ---
+    const providerValue = {
                 weddingData,
                 weddingWishes,
                 setWeddingWishes,
@@ -455,15 +326,15 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({
                 updateGalleryImage,
                 saveData,
                 addWish,
-                login,
-                logout,
                 userId,
                 setUserId,
                 userWebEntry,
                 fetchUserWebEntry,
                 loadWeddingData,
-            }}
-        >
+    };
+
+    return (
+        <WeddingContext.Provider value={providerValue}>
             {children}
         </WeddingContext.Provider>
     );

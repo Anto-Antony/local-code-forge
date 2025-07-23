@@ -1,10 +1,10 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useWedding } from "@/contexts/WeddingContext";
+import { useWeddingAuth } from "@/contexts/WeddingAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import Background from "@/components/Background";
 import { ArrowRightLeft, LucideArrowLeftSquare } from "lucide-react";
@@ -15,7 +15,7 @@ const Login = () => {
     const [password, setPassword] = useState("password");
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
-    const { login, setUserId, fetchUserWebEntry } = useWedding();
+    const { login, setUserId, globalIsLoading } = useWeddingAuth();
     const { toast } = useToast();
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -37,7 +37,6 @@ const Login = () => {
                     description: "Logged in successfully!",
                 });
                 setUserId(result.user.id);
-                await fetchUserWebEntry(result.user.id);
                 navigate(`/wedding/${result.user.id}`);
             } else {
                 toast({
@@ -99,7 +98,7 @@ const Login = () => {
                                 className="w-full"
                                 disabled={isLoading}
                             >
-                                {isLoading ? "Logging in..." : "Login"}
+                                {globalIsLoading ? "Logging in..." : "Login"}
                             </Button>
                             <div className="text-center">
                                 <Link

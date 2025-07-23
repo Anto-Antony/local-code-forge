@@ -14,6 +14,7 @@ import type {
 import { WebEntry } from "@/types/wedding";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
+import { useWeddingAuth } from "@/contexts/WeddingAuthContext";
 
 export interface WeddingContextType {
     weddingData: WeddingData;
@@ -33,11 +34,6 @@ export interface WeddingContextType {
     loadAllWeddingWishes: () => Promise<void>;
     saveData: (data: WeddingData) => Promise<boolean>;
     addWish: (data: WeddingWish) => Promise<void>;
-    login: (
-        email: string,
-        password: string,
-    ) => Promise<{ error: string | null }>; // match custom login
-    logout: () => Promise<void>;
     userId: string | null;
     setUserId: (id: string | null) => void;
     userWebEntry: WebEntry | null;
