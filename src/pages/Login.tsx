@@ -11,8 +11,8 @@ import { ArrowRightLeft, LucideArrowLeftSquare } from "lucide-react";
 import { WebEntry } from "@/types/wedding";
 
 const Login = () => {
-    const [email, setEmail] = useState("user@gmail.com");
-    const [password, setPassword] = useState("password");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
     const { login, setUserId, globalIsLoading } = useWeddingAuth();

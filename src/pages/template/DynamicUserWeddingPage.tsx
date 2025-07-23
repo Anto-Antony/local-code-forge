@@ -9,6 +9,9 @@ const templates = [
   { key: "model_2", label: "Template 2", preview: "/placeholder.svg" },
 ];
 
+// Use import.meta.glob to import all possible template pages
+const templatePages = import.meta.glob("./model_*/[user_id]/page.tsx");
+
 export default function DynamicUserWeddingPage() {
   const { weddingData, editable, updateWeddingData } = useWedding();
   const { user_id } = useParams();
@@ -18,7 +21,14 @@ export default function DynamicUserWeddingPage() {
 
   useEffect(() => {
     const template = weddingData.template || "model_1";
-    import(`./${template}/[user_id]/page`).then(mod => setTemplateComponent(() => mod.default));
+    // Find the correct import path for the template
+    const importPath = `./${template}/[user_id]/page.tsx`;
+    const importFn = templatePages[importPath];
+    if (importFn) {
+      importFn().then((mod: any) => setTemplateComponent(() => mod.default));
+    } else {
+      setTemplateComponent(() => null);
+    }
   }, [weddingData.template, user_id]);
 
   const handleSave = async () => {
