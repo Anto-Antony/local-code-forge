@@ -15,13 +15,19 @@ const templatePages = import.meta.glob("./model_*/[user_id]/page.tsx");
 export default function DynamicUserWeddingPage() {
   const { weddingData, editable, updateWeddingData } = useWedding();
   const { user_id } = useParams();
-  const [TemplateComponent, setTemplateComponent] = useState<React.ComponentType | null>(null);
+  // selected is now lifted up
   const [selected, setSelected] = useState(weddingData.template || "model_1");
+  const [TemplateComponent, setTemplateComponent] = useState<React.ComponentType | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const template = weddingData.template || "model_1";
-    // Find the correct import path for the template
+    // When weddingData.template changes (after save), update selected
+    setSelected(weddingData.template || "model_1");
+  }, [weddingData.template]);
+
+  useEffect(() => {
+    // Use selected for preview
+    const template = selected || "model_1";
     const importPath = `./${template}/[user_id]/page.tsx`;
     const importFn = templatePages[importPath];
     if (importFn) {
@@ -29,7 +35,7 @@ export default function DynamicUserWeddingPage() {
     } else {
       setTemplateComponent(() => null);
     }
-  }, [weddingData.template, user_id]);
+  }, [selected, user_id]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -40,7 +46,13 @@ export default function DynamicUserWeddingPage() {
   return (
     <SidebarProvider>
       {editable && (
-       <TemplateSidebar />
+       <TemplateSidebar
+         selected={selected}
+         setSelected={setSelected}
+         saving={saving}
+         handleSave={handleSave}
+         weddingData={weddingData}
+       />
       )}
       <main className="transition-all duration-300 ease-in-out">
         { !TemplateComponent ? <div>Loading...</div> : <TemplateComponent /> }
