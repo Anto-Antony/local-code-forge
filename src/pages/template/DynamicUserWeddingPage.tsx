@@ -1,7 +1,7 @@
 import { useWedding } from "@/contexts/WeddingContext";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { SidebarProvider, Sidebar, SidebarContent, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import TemplateSidebar from "@/components/sidebar/TemplateSidebar";
 
 const templates = [

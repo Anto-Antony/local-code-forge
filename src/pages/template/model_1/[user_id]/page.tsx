@@ -5,7 +5,7 @@ import Background from "@/components/Background";
 import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
 import GallerySection from "@/components/GallerySection";
-import Header from "@/components/Header";
+import Header, { HEADER_HEIGHT } from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import JewellerSection from "@/components/JewellerSection";
 import Loading from "@/components/Loading";
@@ -43,7 +43,7 @@ const UserWeddingPage = () => {
 
     return (
         <Background>
-            <div className="relative z-10">
+            <div className="relative z-10" style={{ paddingTop: HEADER_HEIGHT }}>
                 <Header />
                 
                 <main>
