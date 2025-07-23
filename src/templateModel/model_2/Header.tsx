@@ -5,12 +5,16 @@ import { useWeddingAuth } from '@/contexts/WeddingAuthContext';
 import { useWedding } from '@/contexts/WeddingContext';
 import { Heart, Menu, X, LogIn, LogOut, Camera, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useSidebar } from '@/components/ui/sidebar';
+
+export const HEADER_HEIGHT = 64; // px
 
 export const Header: React.FC = () => {
   const { isLoggedIn: isAuthenticated, logout } = useWeddingAuth();
   const { weddingData: content } = useWedding();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { open: sidebarOpen, isMobile: sidebarIsMobile } = useSidebar ? useSidebar() : { open: false, isMobile: false };
 
   // Get first letters of couple's names
   const getInitials = () => {
@@ -29,7 +33,14 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className="glass-card border-b border-white/20">
+      <header 
+        className="fixed top-0 left-0 w-full z-30 glass-card border-b border-white/20 transition-all"
+        style={{
+          marginLeft: sidebarOpen && !sidebarIsMobile ? '16rem' : 0,
+          height: HEADER_HEIGHT,
+          transition: 'all 0.3s',
+        }}
+      >
         <div className="container-width py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}

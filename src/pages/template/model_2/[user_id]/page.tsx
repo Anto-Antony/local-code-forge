@@ -1,5 +1,5 @@
 import React from 'react';
-import { Header } from '@/templateModel/model_2/Header';
+import { Header, HEADER_HEIGHT } from '@/templateModel/model_2/Header';
 import { HeroSection } from '@/templateModel/model_2/HeroSection';
 import { LoveStorySection } from '@/templateModel/model_2/LoveStorySection';
 import { ScheduleSection } from '@/templateModel/model_2/ScheduleSection';
@@ -25,8 +25,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-rose-50 via-rose-25 to-white">
-      
+    <div className="min-h-screen bg-gradient-to-b from-rose-50 via-rose-25 to-white" style={{ paddingTop: HEADER_HEIGHT }}>
       <Header />
       <main>
         <HeroSection />

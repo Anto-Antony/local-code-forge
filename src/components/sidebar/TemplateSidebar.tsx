@@ -109,7 +109,7 @@ export default function TemplateSidebar() {
                 opacity: saving || selected === weddingData.template ? 0.6 : 1,
                 cursor: saving || selected === weddingData.template ? 'not-allowed' : 'pointer',
                 transition: 'opacity 0.2s',
-                boxShadow: '0 0 16px 4px #6366f1aa, 0 2px 8px #6366f188', // Glowing effect
+                boxShadow: '0 0 16px 4px #6366f1aa, 0 2px 8px #6366f1aa', // Glowing effect
                 animation: saving || selected === weddingData.template ? 'none' : 'pulse-glow 1.5s infinite', // Pulse animation
               }}
             >
@@ -118,9 +118,9 @@ export default function TemplateSidebar() {
             {/* Pulse animation keyframes */}
             <style>{`
               @keyframes pulse-glow {
-                0% { box-shadow: 0 0 16px 4px #6366f1aa, 0 2px 8px #6366f188; }
+                0% { box-shadow: 0 0 16px 4px #6366f1aa, 0 2px 8px #6366f1aa; }
                 50% { box-shadow: 0 0 32px 8px #6366f1cc, 0 2px 16px #6366f1aa; }
-                100% { box-shadow: 0 0 16px 4px #6366f1aa, 0 2px 8px #6366f188; }
+                100% { box-shadow: 0 0 16px 4px #6366f1aa, 0 2px 8px #6366f1aa; }
               }
             `}</style>
           </SidebarContent>

@@ -6,6 +6,9 @@ import { useWeddingAuth } from "@/contexts/WeddingAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import scrollToElement from "@/utils/scrollToElement";
+import { useSidebar } from "@/components/ui/sidebar";
+
+const HEADER_HEIGHT = 64; // px
 
 const Header: React.FC<{ isNotIndexPage?: boolean }> = ({ isNotIndexPage }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -15,6 +18,7 @@ const Header: React.FC<{ isNotIndexPage?: boolean }> = ({ isNotIndexPage }) => {
     const { toast } = useToast();
     const location = useLocation();
     const navigate = useNavigate();
+    const { open: sidebarOpen, isMobile: sidebarIsMobile } = useSidebar ? useSidebar() : { open: true, isMobile: false };
 
     const navItems = [
         { name: "Home", href: "#hero" },
@@ -69,9 +73,14 @@ const Header: React.FC<{ isNotIndexPage?: boolean }> = ({ isNotIndexPage }) => {
     return (
         <header
             className={cn(
-                "backdrop-blur-md bg-white/20 border-b border-white/20 transition-all duration-200 h-auto",
+                "fixed top-0 left-0 w-full z-30 backdrop-blur-md bg-white/20 border-b border-white/20 transition-all duration-200 h-auto",
                 (!isScrolled || isNotIndexPage) && "bg-transparent",
             )}
+            style={{
+                marginLeft: sidebarOpen && !sidebarIsMobile ? '16rem' : 0,
+                height: HEADER_HEIGHT,
+                transition: 'all 0.3s',
+            }}
         >
             <nav
                 className={cn(
@@ -145,4 +154,5 @@ const Header: React.FC<{ isNotIndexPage?: boolean }> = ({ isNotIndexPage }) => {
     );
 };
 
+export { HEADER_HEIGHT };
 export default Header;
